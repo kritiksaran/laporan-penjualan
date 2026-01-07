@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Dashboard Order</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root{
+  --primary:#2563eb;
+  --bg:#f4f6f8;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --radius:12px;
+}
+
+/* RESET */
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont;
+  background:var(--bg);
+  padding:16px;
+  color:var(--text);
+}
+h2{margin:0 0 16px;font-size:20px}
+
+/* ===== CARD ===== */
+.card{
+  background:var(--card);
+  padding:16px;
+  border-radius:var(--radius);
+  margin-bottom:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,.05);
+}
+
+/* ===== STAT ===== */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:12px;
+}
+.stat{text-align:center}
+.stat small{color:var(--muted)}
+.stat h3{margin:4px 0 0;font-size:18px}
+
+/* ===== FORM ELEMENT ===== */
+input,select,button{
+  width:100%;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid #e5e7eb;
+  font-size:14px;
+}
+input:focus,select:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 2px rgba(37,99,235,.15);
+}
+button{
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+}
+button:hover{opacity:.9}
+button:disabled{opacity:.6;cursor:not-allowed}
+
+/* ===== ACTION BAR ===== */
+.card > select,
+.card > input,
+.card > button{
+  max-width:260px;
+}
+.card > button{margin-top:8px}
+
+/* ===== TABLE ===== */
+.table-wrap{width:100%;overflow-x:auto}
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:1100px;
+  font-size:13px;
+}
+th,td{
+  padding:8px 10px;
+  border-bottom:1px solid #eee;
+  white-space:nowrap;
+}
+th{
+  background:#f1f5f9;
+  font-weight:600;
+  text-align:center;
+}
+td{text-align:left}
+
+/* WA LINK */
+a.wa{
+  color:#25d366;
+  font-weight:600;
+  text-decoration:none;
+}
+
+/* ===== AKSI BUTTON ===== */
+td:last-child{
+  width:110px;
+  text-align:center;
+}
+td button{
+  width:auto;
+  padding:6px 8px;
+  border-radius:8px;
+  font-size:14px;
+  margin:0 2px;
+}
+td button:first-child{background:#2563eb}
+td button:last-child{background:#dc2626}
+
+/* ===== MODAL ===== */
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  z-index:999;
+  padding:16px;
+}
+.modal-content{
+  background:#fff;
+  width:100%;
+  max-width:560px;
+  margin:auto;
+  border-radius:var(--radius);
+  padding:16px;
+  max-height:90vh;
+  overflow-y:auto;
+}
+.modal-content h3{
+  margin:0 0 12px;
+  font-size:18px;
+}
+
+/* ===== MODAL FORM (2 COLUMN) ===== */
+#modalForm{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px 12px;
+}
+#modalForm span{
+  font-size:12px;
+  color:var(--muted);
+}
+#modalForm input,
+#modalForm select{
+  margin:0;
+}
+
+/* Desktop 2 kolom */
+@media (min-width:768px){
+  #modalForm{
+    grid-template-columns:1fr 1fr;
+  }
+  #modalForm button{
+    grid-column:span 2;
+  }
+}
+
+/* Full width fields */
+#f_alamat,
+#f_addons,
+#f_ket{
+  grid-column:span 2;
+}
+
+/* Modal buttons */
+#btnKirim{
+  background:var(--primary);
+}
+#modalForm button[type="button"]{
+  background:#e5e7eb;
+  color:#111827;
+}
+
+/* ===== TOAST ===== */
+#toast{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#111827;
+  color:#fff;
+  padding:12px 16px;
+  border-radius:10px;
+  opacity:0;
+  transition:.3s;
+  z-index:9999;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width:640px){
+  h2{font-size:18px}
+  .card{padding:12px}
+  .stat h3{font-size:16px}
+  table{font-size:12px}
+  .modal-content{padding:12px}
+  button{padding:12px}
+}
+</style>
+
+</head>
+
+<body>
+  <h2>📊 Dashboard Order</h2>
+  <div class="card grid">
+    <div class="stat"><small>Total Order</small><h3 id="count">0</h3></div>
+    <div class="stat"><small>Omzet</small><h3 id="total">Rp 0</h3></div>
+    <div class="stat"><small>DP</small><h3 id="dp">Rp 0</h3></div>
+    <div class="stat"><small>Kurang</small><h3 id="kurang">Rp 0</h3></div>
+  </div>
+
+  <div class="card">
+    <select id="bulan" onchange="loadData()"></select>
+    <input id="search" placeholder="Cari Nama Pemesan" oninput="filterData()">
+    <button onclick="openCreate()">➕ Tambah Data</button>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Nama</th>
+          <th>WA</th>
+          <th>Acara</th>
+          <th>Paket</th>
+          <th>Total</th>
+          <th>DP</th>
+          <th>Kurang</th>
+          <th>Status</th>
+          <th>Tgl Acara</th>
+          <th>Proses</th>
+          <th>Masa Aktif</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h3 id="modalTitle">Data Pemesan</h3>
+      <form id="modalForm">
+        <span>Tanggal</span>
+        <input id="f_tanggal" type="date">
+        <span>Nama Pemesan</span>
+        <input id="f_nama" placeholder="Nama Pemesan">
+        <span>Nomor Whatsapp</span>
+        <input id="f_wa" placeholder="628....">
+        <span>Alamat</span>
+        <input id="f_alamat" placeholder="Kab/Kota - Prov">
+        <span>Acara</span>
+        <input id="f_acara" placeholder="Acara">
+        <span>Pilihan Paket</span>
+        <select id="f_paket">
+          <option value="">Pilih Paket</option>
+          <option>Platinum</option>
+          <option>Premium</option>
+        </select>
+        <span>Harga</span>
+        <input id="f_harga" placeholder="Harga">
+        <span>Keterangan Addons</span>
+        <input id="f_addons" placeholder="Addons">
+        <span>Harga Addons</span>
+        <input id="f_harga_addons" placeholder="Harga Addons">
+        <span>Pembayaran Awal (DP)</span>
+        <input id="f_dp" placeholder="DP">
+        <span>Status Pembayaran</span>
+        <select id="f_status">
+          <option value="">Pilih Status</option>
+          <option>Lunas</option>
+          <option>Belum Lunas</option>
+        </select>
+        <span>Tanggal Acara</span>
+        <input id="f_tgl_acara" type="date">
+        <span>Proses Saat Ini</span>
+        <input id="f_proses" placeholder="Proses">
+        <span>Masa Aktif</span>
+        <input id="f_tempo" type="date">
+        <span>Pilihan Tema</span>
+        <input id="f_tema" placeholder="Tema">
+        <span>Keterangan</span>
+        <input id="f_ket" placeholder="Keterangan">
+        <button type="submit" id="btnKirim">Kirim</button>
+        <button type="button" onclick="closeModal()">Batal</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script>
+    const API_URL="https://script.google.com/macros/s/AKfycbwOO-EB0dDO8QSZVZkOTvPkYDI1anKlm4zXYSNGkrelxmv7UJZ7AfSIhu4d3vjjUdFg2w/exec";
+
+    let allData=[],editId=null;
+    const el=id=>document.getElementById(id);
+    const tbody=el("tbody");
+
+    const rupiah=n=>"Rp "+Number(n||0).toLocaleString("id-ID");
+
+    /* ===== FIX TIMEZONE DATE ===== */
+    function toDate(v){
+      if(!v) return "";
+      const d=new Date(v);
+      d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
+      return d.toISOString().slice(0,10);
+    }
+    function toast(t){
+      el("toast").innerText=t;
+      el("toast").style.opacity=1;
+      setTimeout(()=>el("toast").style.opacity=0,3000);
+    }
+    async function loadData(){
+      const b=el("bulan").value;
+      allData=await fetch(`${API_URL}?action=read&bulan=${b}`).then(r=>r.json());
+      render();
+    }
+
+    function render(){
+      tbody.innerHTML="";
+      let t=0,d=0,k=0;
+      allData.forEach((x,i)=>{
+        t+=+x.Total||0; d+=+x.DP||0; k+=+x.Kurang||0;
+        tbody.innerHTML+=`
+        <tr>
+          <td>${i+1}</td>
+          <td>${x.Nama_Pemesan}</td>
+          <td><a class="wa" target="_blank" href="https://wa.me/${x.Nomor_WA}">Chat</a></td>
+          <td>${x.Acara}</td>
+          <td>${x.Paket}</td>
+          <td>${rupiah(x.Total)}</td>
+          <td>${rupiah(x.DP)}</td>
+          <td>${rupiah(x.Kurang)}</td>
+          <td>${x.Status}</td>
+          <td>${toDate(x.Tanggal_Acara)}</td>
+          <td>${x.Proses}</td>
+          <td>${toDate(x.Masa_Aktif)}</td>
+          <td style="width:110px;text-align:center;white-space:nowrap;">
+            <button onclick="editData('${x.ID}')"style="background:#2563eb;border:none;padding:6px 8px;border-radius:6px;color:#fff;margin-right:4px;cursor:pointer;">✏️
+            </button>
+            <button onclick="hapus('${x.ID}')"style="background:#dc2626;border:none;padding:6px 8px;border-radius:6px;color:#fff;cursor:pointer;">🗑
+            </button></br>
+          </td>
+        </tr>`;
+      });
+      el("count").innerText=allData.length;
+      el("total").innerText=rupiah(t);
+      el("dp").innerText=rupiah(d);
+      el("kurang").innerText=rupiah(k);
+    }
+    modalForm.onsubmit=async e=>{
+      e.preventDefault();
+      btnKirim.disabled=true;
+
+      const h=+f_harga.value||0;
+      const ha=+f_harga_addons.value||0;
+      const dpv=+f_dp.value||0;
+
+      await fetch(API_URL,{
+        method:"POST",
+        body:JSON.stringify({
+          action:editId?"update":"create",
+          id:editId,
+          data:{
+            Tanggal:f_tanggal.value,
+            Nama_Pemesan:f_nama.value,
+            Nomor_WA:f_wa.value,
+            Alamat:f_alamat.value,
+            Acara:f_acara.value,
+            Paket:f_paket.value,
+            Harga:h,
+            Addons:f_addons.value,
+            Harga_Addons:ha,
+            Total:h+ha,
+            DP:dpv,
+            Kurang:h+ha-dpv,
+            Status:f_status.value,
+            Tanggal_Acara:f_tgl_acara.value,
+            Proses:f_proses.value,
+            Masa_Aktif:f_tempo.value,
+            Tema:f_tema.value,
+            Ket:f_ket.value
+          }
+        })
+      });
+      toast("Data tersimpan");
+      modalForm.reset();
+      editId=null;
+      btnKirim.disabled=false;
+      closeModal();
+      loadData();
+    };
+    function editData(id){
+      const x=allData.find(d=>d.ID==id);
+      editId=id;
+      f_tanggal.value=toDate(x.Tanggal);
+      f_nama.value=x.Nama_Pemesan;
+      f_wa.value=x.Nomor_WA;
+      f_alamat.value=x.Alamat;
+      f_acara.value=x.Acara;
+      f_paket.value=x.Paket;
+      f_harga.value=x.Harga;
+      f_addons.value=x.Addons;
+      f_harga_addons.value=x.Harga_Addons;
+      f_dp.value=x.DP;
+      f_status.value=x.Status;
+      f_tgl_acara.value=toDate(x.Tanggal_Acara);
+      f_proses.value=x.Proses;
+      f_tempo.value=toDate(x.Masa_Aktif);
+      f_tema.value=x.Tema;
+      f_ket.value=x.Ket;
+      modal.style.display="block";
+    }
+    function openCreate(){editId=null;modalForm.reset();modal.style.display="block"}
+    function closeModal(){modal.style.display="none"}
+    function hapus(id){
+      if(confirm("Hapus data?"))
+        fetch(API_URL,{method:"POST",body:JSON.stringify({action:"delete",id})}).then(loadData);
+    }
+    function filterData(){
+  const q = search.value.toLowerCase();
+  tbody.innerHTML = "";
+
+  allData
+    .filter(x =>
+      (x.Nama_Pemesan || "").toLowerCase().includes(q)
+    )
+    .forEach((x, i) => {
+      tbody.innerHTML += `
+      <tr>
+        <td>${i+1}</td>
+        <td>${x.Nama_Pemesan}</td>
+        <td><a class="wa" target="_blank" href="https://wa.me/${x.Nomor_WA}">Chat</a></td>
+        <td>${x.Acara}</td>
+        <td>${x.Paket}</td>
+        <td>${rupiah(x.Total)}</td>
+        <td>${rupiah(x.DP)}</td>
+        <td>${rupiah(x.Kurang)}</td>
+        <td>${x.Status}</td>
+        <td>${toDate(x.Tanggal_Acara)}</td>
+        <td>${x.Proses}</td>
+        <td>${toDate(x.Masa_Aktif)}</td>
+        <td style="width:110px;text-align:center;white-space:nowrap;">
+          <button onclick="editData('${x.ID}')"style="background:#2563eb;border:none;padding:6px 8px;border-radius:6px;color:#fff;margin-right:4px;cursor:pointer;">✏️
+          </button>
+          <button onclick="hapus('${x.ID}')"style="background:#dc2626;border:none;padding:6px 8px;border-radius:6px;color:#fff;cursor:pointer;">🗑
+          </button></br>
+        </td>
+      </tr>`;
+    });
+  }
+
+    (async()=>{
+      const b=await fetch(API_URL+"?action=bulan").then(r=>r.json());
+      el("bulan").innerHTML=b.map(x=>`<option>${x}</option>`).join("");
+      loadData();
+    })();
+  </script>
+</body>
+</html>
